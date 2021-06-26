@@ -35,12 +35,26 @@ primates_cr <-
 st_crs(primates_cr) = 4326
 ```
 
+# Añadimos la columna de Canton
+
+```{r}
+# Cargamos los cantones de CR
+cantones <-
+  st_read(
+    "https://raw.githubusercontent.com/gf0604-procesamientodatosgeograficos/2021i-datos/main/ign/delimitacion-territorial-administrativa/cr_cantones_simp_wgs84.geojson",
+    quiet = TRUE
+  )
+# 
+primates_cr <- primates_cr %>%
+  st_join(cantones["canton"])
+```
+
 # Tabla de registros
 
 ```{r}
 primates_cr %>%
  st_drop_geometry() %>%
-  dplyr::select(family, species, stateProvince, individualCount, eventDate) %>%
+  dplyr::select(family, species, stateProvince, canton, eventDate) %>%
   DT::datatable(
     colnames = c("familia", "especies", "provincia", "cantón","fecha"),
     rownames = FALSE,
@@ -133,7 +147,7 @@ leaflet() %>%
     popup = paste(
       primates_cr$family,
       primates_cr$species,
-      primates_cr$stateProvince,
+      primates_cr$canton,
       primates_cr$individualCount,
       primates_cr$eventDate,
       primates_cr$decimalLongitude,

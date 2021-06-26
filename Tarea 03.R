@@ -18,28 +18,30 @@ primates_cr <-
     quiet = TRUE
   )
 
-# Tabla de registros de presencia
-primates_cr %>%
-  st_drop_geometry() %>%
-  select(kingdom, phylum, class, order, family, genus, species, stateProvince, individualCount, eventDate) %>%
-  datatable(
-    colnames = c("reino", "filo", "clase", "orden", "familia", "genero", "especie", "privincia", "cantón", "fecha"),
-    options = list(searchHighlight = TRUE)
-  ) 
+# Asignación de CRS
+st_crs(primates_cr) = 4326
 
+# Cargamos los cantones de CR
+cantones <-
+  st_read(
+    "https://raw.githubusercontent.com/gf0604-procesamientodatosgeograficos/2021i-datos/main/ign/delimitacion-territorial-administrativa/cr_cantones_simp_wgs84.geojson",
+    quiet = TRUE
+  )
+# 
+primates_cr <- primates_cr %>%
+  st_join(cantones["canton"])
 
 # Tabla de datos de registros de presencia
 primates_cr %>%
- ## st_drop_geometry() %>%
-  select(family, species, stateProvince, individualCount, eventDate
-  ) %>%
+ st_drop_geometry() %>%
+  dplyr::select(family, species, stateProvince, canton, eventDate) %>%
   DT::datatable(
-    colnames = c("familia", "especie", "provincia", "cantón","fecha"),
+    colnames = c("familia", "especies", "provincia", "cantón","fecha"),
     rownames = FALSE,
-    options = list(  language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json'),
-
+    options = list(
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json'),
       searchHighlight = TRUE
-    ),
+    )
   )
 
 
@@ -111,7 +113,7 @@ leaflet() %>%
     popup = paste(
       primates_cr$family,
       primates_cr$species,
-      primates_cr$stateProvince,
+      primates_cr$canton,
       primates_cr$individualCount,
       primates_cr$eventDate,
       primates_cr$decimalLongitude,
