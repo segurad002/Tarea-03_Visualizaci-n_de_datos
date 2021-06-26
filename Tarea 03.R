@@ -56,9 +56,11 @@ fig <- fig %>% layout(title = 'Cantidad de registros para cada especie y sus res
                       yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
 fig
 
+
+
 ###Se debe traducir 
 # Create a palette that maps factor levels to colors
-pal <- colorFactor(c("navy", "red", "blue", "yellow"), domain = c("Alouatta palliata", "Ateles geoffroyi", "Cebus capucinus
+palSpecies <- colorFactor(c("navy", "red", "blue", "yellow"), domain = c("Alouatta palliata", "Ateles geoffroyi", "Cebus capucinus
 ", "Saimiri oerstedii"))
 
 # Obtención de la capa de altitud
@@ -82,32 +84,29 @@ altitud <-
   crop(provincias) %>%
   mask(provincias)
 
-pal <- colorNumeric(
-  c("#006400", "#FFFF00", "#0000FF"), 
-  values(altitud), 
-  na.color = "transparent"
-)
-#
-#select(family, species, stateProvince, individualCount, eventDate,
- #      decimalLongitude,
-  #     decimalLatitude) %>%
 #Mapa de distribución de primates en Costa Rica 
-primates_cr %>%
-  leaflet() %>%
-  addRasterImage(altitud,
-                 colors = pal, 
-                 opacity = 0.8) %>%
+leaflet() %>%
+  addTiles() %>%
+  addRasterImage(
+    altitud, 
+    # colors = pal, 
+    opacity = 0.8,
+    group = "Altitud"
+  ) %>%
   addProviderTiles(providers$OpenStreetMap.Mapnik, group = "OpenStreetMap") %>%
   addProviderTiles(providers$Stamen.TonerLite, group = "Stamen Toner Lite") %>%
   addProviderTiles(providers$Esri.WorldImagery, group = "Imágenes de ESRI") %>%
-  addProviderTiles(providers$Stamen.TerrainBackground, group = "Prueba") %>%
+  addProviderTiles(providers$Stamen.TerrainBackground, group = "Profundida de terreno") %>%
   addProviderTiles(providers$OpenTopoMap, group = "Topografía") %>%
-  
+  addLayersControl(
+    baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "Imágenes de ESRI", "Profundida de terreno", "Topografía", "Altitud"),
+    overlayGroups = c("Primates")
+  ) %>%
   addCircleMarkers(
+    data = primates_cr,
     stroke = F,
     radius = 4,
-    color = ~pal(species),
-    #fillColor = 'gray',
+    color = ~palSpecies(species),
     fillOpacity = 1,
     popup = paste(
       primates_cr$family,
@@ -120,10 +119,6 @@ primates_cr %>%
       sep = '<br/>'
     ),
     group = "primates de Costa Rica"
-  ) %>%
-  addLayersControl(
-    baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "Imágenes de ESRI", "Profundida de terreno", "Topografía"),
-    overlayGroups = c("Primates")
   ) %>%
   addMiniMap(
     tiles = providers$Stamen.OpenStreetMap.Mapnik,
